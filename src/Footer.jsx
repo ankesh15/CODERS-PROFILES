@@ -14,7 +14,7 @@ const Footer = () => {
                     <div className="flex space-x-4 mb-4 md:mb-0">
                         <a
                             title="Give a star"
-                            href=""
+                            href="https://github.com/ankesh15/CODERS-PROFILES"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="block w-10 h-10 rounded-full transition-all shadow hover:shadow-lg transform hover:scale-110 hover:rotate-12"
