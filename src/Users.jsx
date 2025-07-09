@@ -3,33 +3,27 @@ import axios from 'axios';
 import {Link} from "react-router-dom";
 import LoadingCard from "./Loading.jsx";
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL;
+
 const Users = () => {
     const [users, setUsers] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [loading, setLoading] = useState(false);
-
-    const fetchUsers = async () => {
-        try {
-            setLoading(true);
-            const data = await axios.get(`${import.meta.env.VITE_API}/users`);
-            if (data) {
-
-                setUsers(data.data);
-                setLoading(false);
-            } else {
-                console.log('No User Found');
-                setLoading(false);
-            }
-
-        } catch (e) {
-            setLoading(false);
-            console.log(e);
-
-        }
-    };
+    const [error, setError] = useState(null);
 
     useEffect(() => {
-        fetchUsers();
+        setLoading(true);
+        setError(null);
+        fetch(`${API_BASE}/users`)
+            .then(res => res.json())
+            .then(data => {
+                setUsers(data);
+                setLoading(false);
+            })
+            .catch(() => {
+                setError('Failed to fetch leaderboard data.');
+                setLoading(false);
+            });
     }, []);
 
     // Filter users based on the search query
@@ -48,55 +42,40 @@ const Users = () => {
     }
 
     return (
-        <div>
-            <h1 className="text-2xl text-white text-center my-4">T<span
-                className="text-yellow-600 dark:text-yellow-600">O</span>P Profiles</h1>
-            <div className="p-4 flex justify-center">
-                <input
-                    type="text"
-                    placeholder="Search by name, email, or username"
-                    className="w-3/4 p-2 rounded-lg border border-white text-white bg-transparent"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                />
-            </div>
-            {!loading ?   <table className="w-3/4 mx-auto text-white rounded-lg p-4">
-                <thead>
-                <tr>
-                    <th className="px-4 py-2 text-yellow-600">Name</th>
-                    <th className="px-4 py-2 text-yellow-600">Profile</th>
-                    <th className="px-4 py-2 text-yellow-600">Link</th>
-                </tr>
-                </thead>
-                <tbody>
-                { filteredUsers.length > 0 ? (
-                    filteredUsers.map((user) => (
-                        <tr key={user.id}>
-                            <td className="border px-4 py-2">{formatName(user.name)}</td>
-                            <td className="border px-4 py-2">{user.profile}</td>
-                            <td className="border px-4 py-2 text-center">
-                                <Link
-                                    to={`/profile/${user.profile}`}
-                                    className="text-yellow-600 hover:underline"
-                                >
-                                    Profile
-                                </Link>
-                            </td>
-                        </tr>
-                    ))
+        <div className="max-w-3xl mx-auto mt-10">
+            <div className="bg-white rounded shadow p-6">
+                <h2 className="text-2xl font-bold mb-4 text-center">Leaderboard</h2>
+                {error && <div className="bg-red-100 text-red-700 p-3 rounded mb-4">{error}</div>}
+                {loading ? (
+                    <div className="text-center py-4">Loading...</div>
                 ) : (
-                    <tr>
-                        <td colSpan="3" className="text-center">
-                            No users found.
-                        </td>
-                    </tr>
+                    <div className="overflow-x-auto">
+                        <table className="w-full bg-white rounded">
+                            <thead>
+                                <tr className="bg-gray-100">
+                                    <th className="p-2">Rank</th>
+                                    <th className="p-2">User</th>
+                                    <th className="p-2">Profile</th>
+                                    <th className="p-2">Registered</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {users.map((user, idx) => (
+                                    <tr key={user._id} className="border-t hover:bg-gray-50">
+                                        <td className="p-2 text-center font-semibold">{idx + 1}</td>
+                                        <td className="p-2 flex items-center">
+                                            <span className="inline-block w-8 h-8 bg-gray-200 rounded-full mr-2"></span>
+                                            {user.name}
+                                        </td>
+                                        <td className="p-2">{user.profile}</td>
+                                        <td className="p-2">{new Date(user.createdAt).toLocaleDateString()}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 )}
-                </tbody>
-            </table> : (<> <h1 className="mb-4 text-3xl font-extrabold leading-none tracking-tight text-gray-900 change md:text-4xl text-white text-center ">
-                {" "}
-                <LoadingCard class="text-six" count={3}/>
-            </h1></>)}
-
+            </div>
         </div>
     );
 };

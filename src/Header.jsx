@@ -1,11 +1,18 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 
-const Header = () => {
+const Header = ({ user, onLogout, setUser }) => {
   const [menuOpen, setMenuOpen] = useState(false);
 
   const toggleMenu = () => {
     setMenuOpen(!menuOpen);
+  };
+
+  const handleLogout = () => {
+    fetch(`${import.meta.env.VITE_API_BASE_URL}/logout`, {
+      method: 'POST',
+      credentials: 'include',
+    }).then(() => onLogout());
   };
 
   return (
@@ -79,6 +86,19 @@ const Header = () => {
               </Link>
             </li>
           </ul>
+        </div>
+        <div>
+          {user ? (
+            <>
+              {user.photos && user.photos[0] && (
+                <img src={user.photos[0].value} alt="avatar" className="inline-block w-8 h-8 rounded-full mr-2" />
+              )}
+              <span className="mr-4">Welcome, {user.displayName || user.username}</span>
+              <button onClick={handleLogout} className="bg-red-500 px-4 py-2 rounded">Logout</button>
+            </>
+          ) : (
+            <Link to="/login" className="bg-blue-500 px-4 py-2 rounded">Login</Link>
+          )}
         </div>
       </div>
     </nav>

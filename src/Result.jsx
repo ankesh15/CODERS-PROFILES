@@ -39,6 +39,8 @@ function App() {
         width: "92%",
     };
 
+    const API_BASE = import.meta.env.VITE_API_BASE_URL;
+
     async function getDataFromSearch() {
         const user = {
             profile: profile,
@@ -107,115 +109,59 @@ function App() {
     }, [loadGithub, leetLoading]);
 
     const getDataFromLeetCode = async (leetcodeProfilrUrl) => {
-        console.log("Hit")
-        console.log(leetcodeProfilrUrl);
-        const value = await axios.get(
-            `${import.meta.env.VITE_LEETCODE}/${leetcodeProfilrUrl}`
-        );
-        console.log(value);
+        try {
+            const value = await axios.post(`${API_BASE}/leetcode`, { username: leetcodeProfilrUrl });
+            if (value.data.profile) {
+                setDataC(value.data.profile.submissionCalendar || {});
+                setCount(0);
+                setLeetLoading(true);
+                setNew([]);
+                const realdata = newS;
 
-        if (value) {
-            setCount(0);
-            //  console.log(value.data.submissionCalendar);
-            setDataC([]);
-            // setLeetcode("");
-            setLeetLoading(true);
-            //newS.length=0;
-            setNew([]);
-            setDataC(value.data.submissionCalendar);
-            // console.log("Submisson Uppddate");
-            // console.log(dataC);
-            const realdata = newS;
+                for (let property in dataC) {
+                    var myDate = new Date(`${property}` * 1000)
+                        .toISOString()
+                        .replace("-", "/")
+                        .split("T")[0]
+                        .replace("-", "/");
 
-            for (let property in dataC) {
-                var myDate = new Date(`${property}` * 1000)
-                    .toISOString()
-                    .replace("-", "/")
-                    .split("T")[0]
-                    .replace("-", "/");
-
-                realdata.push({date: `${myDate}`, count: `${dataC[property]}`});
-
-                //console.log(`${property}: ${dataC[property]}`);
+                    realdata.push({date: `${myDate}`, count: `${dataC[property]}`});
+                }
+                setNew(realdata);
+                realdata.splice();
+                setCount(1);
+                setLeetLoading(false);
             }
-            setNew(realdata);
-            realdata.splice();
-            // setLoading(false);
-            // for (const x in dataC) {
-            //   console.log(x);
-            // }
-            setCount(1);
-            setLeetLoading(false);
-        } else {
-            console.log("Please Try Again");
+        } catch (err) {
+            console.log('LeetCode API error', err);
         }
-        // callAgain();
     };
 
-    const getContributions = async (token, username) => {
-        const headers = {
-            Authorization: `bearer ${token}`,
-        };
-        const body = {
-            query: `query {
-          user(login: "${username}") {
-            name
-            contributionsCollection {
-              contributionCalendar {
-                colors
-                totalContributions
-                weeks {
-                  contributionDays {
-                    color
-                    contributionCount
-                    date
-                    weekday
-                  }
-                  firstDay
-                }
-              }
-            }
-          }
-        }`,
-        };
-        const response = await fetch(`${import.meta.env.VITE_GIT}`, {
-            method: "POST",
-            body: JSON.stringify(body),
-            headers: headers,
-        });
-        const data = await response.json();
-        return data;
+    const getContributions = async (username) => {
+        try {
+            const value = await axios.post(`${API_BASE}/github`, { username });
+            return value.data;
+        } catch (err) {
+            console.log('GitHub API error', err);
+            return null;
+        }
     };
 
     const geGithubData = async (profileUrlGit) => {
-        // console.log(profileUrlGit);
-        const valueGit = await getContributions(
-            `${import.meta.env.VITE_TOKEN}`,
-            `${profileUrlGit}`
-        );
-        // console.log(valueGit);
-        if (valueGit) {
+        const valueGit = await getContributions(profileUrlGit);
+        if (valueGit && valueGit.profile && valueGit.profile.contributionsCollection) {
             setLoadGithub(true);
-            // console.log(value.data.user.contributionsCollection.contributionCalendar.weeks)
-            const tempArray =
-                valueGit.data.user.contributionsCollection.contributionCalendar.weeks;
+            const tempArray = valueGit.profile.contributionsCollection.contributionCalendar.weeks;
             const tepmValues = GithubApi;
-            tempArray.forEach((element, index, array) => {
+            tempArray.forEach((element) => {
                 const innerDays = element.contributionDays;
-                innerDays.forEach((element, index, array) => {
+                innerDays.forEach((element) => {
                     if (element.contributionCount > 0) {
-                        tepmValues.push({
-                            date: `${element.date}`,
-                            count: `${element.contributionCount}`,
-                        });
-                        // console.log(element.date);
-                        // console.log(element.contributionCount);
+                        tepmValues.push({ date: `${element.date}`, count: `${element.contributionCount}` });
                     }
                 });
             });
-
             setGithubApi(tepmValues);
-            // console.log(GithubApi);
             setLoadGithub(false);
         }
     };
@@ -318,6 +264,40 @@ function App() {
         // setHandleMonth("");
         // setHandleSubCount("");
         setIsOk(false);
+    };
+
+    const getDataFromCodeforces = async (UserCodeforces) => {
+        try {
+            const value = await axios.post(`${API_BASE}/codeforces`, { username: UserCodeforces });
+            if (value.data.profile) {
+                const tempData = ApiDataCf;
+                const myArray = [value.data.profile];
+                myArray.forEach((element) => {
+                    var myDate = new Date(`${element.creationTimeSeconds}` * 1000)
+                        .toISOString()
+                        .replace("-", "/")
+                        .split("T")[0]
+                        .replace("-", "/");
+                    tempData.push({ date: `${myDate}`, count: `2` });
+                });
+                setApiDataCf(tempData);
+                setLoading(false);
+            }
+        } catch (err) {
+            console.log('Codeforces API error', err);
+        }
+    };
+
+    const getDataFromCodechef = async (UserCodechef) => {
+        try {
+            const value = await axios.post(`${API_BASE}/codechef`, { username: UserCodechef });
+            if (value.data.profile) {
+                // Handle CodeChef data as needed
+                // Example: setCodechefData(value.data.profile);
+            }
+        } catch (err) {
+            console.log('CodeChef API error', err);
+        }
     };
 
     return (
