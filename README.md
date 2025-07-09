@@ -2,7 +2,8 @@
 
 A modern, full-stack dashboard to track and compare coding stats from GitHub, LeetCode, Codeforces, and CodeChef. Built with React (Vite, TailwindCSS) and Node.js/Express/MongoDB.
 
-![Demo](image.png)
+![Demo](![image](https://github.com/user-attachments/assets/ef6df49f-19aa-4e08-b1a6-d26617d11bde)
+)
 
 ---
 
